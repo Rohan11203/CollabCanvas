@@ -1,0 +1,23 @@
+{
+  "name": "backend-common",
+  "version": "1.0.0",
+  "main": "index.js",
+   "exports": {
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/node": "^22.15.3",
+    "node": "^24.2.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*"
+  }
+}
