@@ -3,63 +3,86 @@ import jwt from "jsonwebtoken";
 import bcrypt, { genSalt } from "bcryptjs";
 import { Userauth } from "../auth";
 import { JWT_SECRET } from "@repo/backend-common/config";
-import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/types";
-export const UserRouter: Router = Router();
-UserRouter.post("/signup", (req, res) => {
-  const data = CreateUserSchema.safeParse(req.body);
+import {
+  CreateRoomSchema,
+  CreateUserSchema,
+  SigninSchema,
+} from "@repo/common/types";
+import { prismaClient } from "@repo/db/client";
+import { nanoid } from "nanoid";
 
-  if (!data.success) {
+export const UserRouter: Router = Router();
+UserRouter.post("/signup", async (req: any, res: any) => {
+  const parsed = CreateUserSchema.safeParse(req.body);
+
+  if (!parsed.success) {
     res.json({
+      error: parsed.error.issues[0]?.message,
       message: "Incorrect inputs",
     });
     return;
   }
 
-  const { username, email, password } = req.body;
+  const { username, email, password } = parsed.data;
 
   try {
-    // Db call to check if user Exist
+    const existingUser = await prismaClient.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
     const salt = bcrypt.genSaltSync(5);
     const hashPassword = bcrypt.hashSync(password, salt);
 
-    // Db call to store the data
+    const user = await prismaClient.user.create({
+      data: { email, password: hashPassword, username },
+    });
 
     res.status(200).json({
+      user,
       message: "SignUp successfull",
     });
   } catch (error) {
     res.status(404).json({
-      message: error,
+      error: error,
     });
   }
 });
 
 UserRouter.post("/signin", async (req: any, res: any) => {
-  const data = SigninSchema.safeParse(req.body);
+  const parsed = SigninSchema.safeParse(req.body);
 
-  if (!data.success) {
+  if (!parsed.success) {
     res.json({
+      error: parsed.error.issues[0]?.message,
       message: "Incorrect inputs",
     });
     return;
   }
 
-  const { email, password } = req.body;
+  const { email, password } = parsed.data;
 
   try {
-    // Db call
-    const user = {
-      _id: 1,
-      email: "rohan@gmail.com",
-      password: "123123",
-    };
-    const isMatch = await bcrypt.compare(password, user.password);
+    const user = await prismaClient.user.findUnique({
+      where: { email },
+    });
 
-    if (!isMatch) {
+    if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const payload = { sub: user._id.toString(), email: user.email };
+    if (user.password) {
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+    }
+
+    const payload = { sub: user.id.toString(), email: user.email };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "2h" });
 
     res.status(200).json({
@@ -73,18 +96,34 @@ UserRouter.post("/signin", async (req: any, res: any) => {
   }
 });
 
-UserRouter.post("/create-room", Userauth, (req, res) => {
+UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
+  const parsed = CreateRoomSchema.safeParse(req.body);
 
-  const data = CreateRoomSchema.safeParse(req.body);
-
-  if (!data.success) {
+  if (!parsed.success) {
     res.json({
       message: "Incorrect inputs",
     });
     return;
   }
 
-  res.json({
-    roomId: 123,
-  });
+  const { name } = parsed.data;
+
+  const adminId: string = req.user.id;
+
+
+  try {
+    const room = await prismaClient.room.create({
+      data: {
+        slug : parsed.data.name,
+        adminId,
+      },
+    });
+    res.json({
+      message: "Room created Successfully",
+      room,
+    });
+  } catch (error) {
+     console.error(error);
+      return res.status(500).json({ message: "Could not create room" });
+  }
 });

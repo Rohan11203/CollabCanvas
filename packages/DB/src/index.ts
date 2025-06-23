@@ -1,23 +1,3 @@
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
+import { PrismaClient } from "@prisma/client";
 
-// generator client {
-//   provider = "prisma-client-js"
-// }
-
-// model User {
-//   id    Int     @id @default(autoincrement())
-//   email String  @unique
-//   name  String?
-//   posts Post[]
-// }
-
-// model Post {
-//   id        Int      @id @default(autoincrement())
-//   title     String
-//   published Boolean  @default(false)
-//   author    User     @relation(fields: [authorId], references: [id])
-//   authorId  Int
-// }
+export const prismaClient = new PrismaClient()

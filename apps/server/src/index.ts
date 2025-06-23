@@ -12,6 +12,5 @@ app.get("/", (req:Request,res: Response) => {
     res.send(`App is running `)
 })
 app.listen(PORT, () => {
-    // Db call
     console.log(`Server running on port ${PORT}`)
 })

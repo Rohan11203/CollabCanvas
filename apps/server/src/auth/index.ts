@@ -30,7 +30,7 @@ export const Userauth: RequestHandler = (req:any, res, next) => {
 
     // attach user to request
     req.user = {
-      _id: decoded.sub || decoded.id,
+      id: decoded.sub || decoded.id,
       email: decoded.email,
       source: 'jwt',
     };
