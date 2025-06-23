@@ -1,21 +1,19 @@
 {
-  "name": "@repo/backend-common",
+  "name": "@repo/common",
   "version": "1.0.0",
-  "main": "index.js",
-   "exports": {
-    "./config": "./src/config.ts"
+  "exports" : {
+    "./types": "./src/types.ts"
   },
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/node": "^22.15.3",
-    "node": "^24.2.0"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"
