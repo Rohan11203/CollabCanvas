@@ -99,6 +99,7 @@ UserRouter.post("/signin", async (req: any, res: any) => {
 UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
   const parsed = CreateRoomSchema.safeParse(req.body);
 
+  console.log(parsed);
   if (!parsed.success) {
     res.json({
       message: "Incorrect inputs",
@@ -110,11 +111,10 @@ UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
 
   const adminId: string = req.user.id;
 
-
   try {
     const room = await prismaClient.room.create({
       data: {
-        slug : parsed.data.name,
+        slug: parsed.data.name,
         adminId,
       },
     });
@@ -123,7 +123,31 @@ UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
       room,
     });
   } catch (error) {
-     console.error(error);
-      return res.status(500).json({ message: "Could not create room" });
+    console.error(error);
+    return res.status(500).json({ message: "Could not create room" });
+  }
+});
+
+UserRouter.get("/chats/:roomId",async (req, res) => {
+  try {
+    const roomId = Number(req.params.roomId);
+    const messages = await prismaClient.chat.findMany({
+      where: {
+        roomId: roomId,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      take: 1000,
+    });
+
+    res.json({
+      messages,
+    });
+  } catch (e) {
+    console.log(e);
+    res.json({
+      messages: [],
+    });
   }
 });
