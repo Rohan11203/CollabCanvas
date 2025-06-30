@@ -27,8 +27,8 @@ function checkUser(token: string): string | null {
 }
 
 type Message = {
-  action: "join-room" | "chat" | "leave-room";
-  room: string;
+  type: "join-room" | "chat" | "leave-room";
+  roomId: string;
   message?: string;
 };
 
@@ -40,6 +40,7 @@ wss.on("connection", (ws, req) => {
   users.set(userId, { ws, rooms: new Set() });
 
   ws.on("message", async (raw) => {
+   
     let msg: Message;
     try {
       msg = JSON.parse(raw.toString());
@@ -47,37 +48,40 @@ wss.on("connection", (ws, req) => {
       return ws.send(JSON.stringify({ error: "Invalid JSON" }));
     }
 
-    const { action, room, message } = msg;
+    const { type, roomId, message } = msg;
     const user = users.get(userId)!;
 
-    switch (action) {
+    switch (type) {
       case "join-room": {
-        if (!room)
+        if (!roomId)
           return ws.send(JSON.stringify({ error: "No room specified" }));
-        const dbRoom = await prismaClient.room.findUnique({
-          where: { slug: room },
+        const dbRoom = await prismaClient.room.findFirst({
+          where: {
+            id: Number(roomId),
+          },
         });
         if (!dbRoom)
           return ws.send(JSON.stringify({ error: "Room not found" }));
 
-        user.rooms.add(room);
-        if (!rooms.has(room)) rooms.set(room, new Set());
-        rooms.get(room)!.add(userId);
+        user.rooms.add(roomId);
+        if (!rooms.has(roomId)) rooms.set(roomId, new Set());
+        rooms.get(roomId)!.add(userId);
 
-        return ws.send(JSON.stringify({ info: `Joined room ${room}` }));
+        return ws.send(JSON.stringify({ info: `Joined room ${roomId}` }));
       }
 
       case "chat": {
-        if (!room || typeof message !== "string")
+        if (!roomId || typeof message !== "string")
           return ws.send(JSON.stringify({ error: "Need room and message" }));
-
-        const memberSet = rooms.get(room);
+        const memberSet = rooms.get(roomId);
         if (!memberSet || !memberSet.has(userId))
-          return ws.send(JSON.stringify({ error: `Not in room ${room}` }));
+          return ws.send(JSON.stringify({ error: `Not in room ${roomId}` }));
 
         // chat in DB
-        const dbRoom = await prismaClient.room.findUnique({
-          where: { slug: room },
+        const dbRoom = await prismaClient.room.findFirst({
+          where: {
+            id: Number(roomId),
+          },
         });
         if (dbRoom) {
           await prismaClient.chat.create({
@@ -90,8 +94,8 @@ wss.on("connection", (ws, req) => {
         }
 
         const payload = JSON.stringify({
-          action: "chat",
-          room,
+          type: "chat",
+          roomId,
           from: userId,
           message,
         });
@@ -102,21 +106,21 @@ wss.on("connection", (ws, req) => {
       }
 
       case "leave-room": {
-        if (!room)
+        if (!roomId)
           return ws.send(JSON.stringify({ error: "No room specified" }));
-        user.rooms.delete(room);
+        user.rooms.delete(roomId);
 
-        const memberSet = rooms.get(room);
+        const memberSet = rooms.get(roomId);
         if (memberSet) {
           memberSet.delete(userId);
-          if (memberSet.size === 0) rooms.delete(room);
+          if (memberSet.size === 0) rooms.delete(roomId);
         }
 
-        return ws.send(JSON.stringify({ info: `Left room ${room}` }));
+        return ws.send(JSON.stringify({ info: `Left room ${roomId}` }));
       }
 
       default:
-        return ws.send(JSON.stringify({ error: `Unknown action: ${action}` }));
+        return ws.send(JSON.stringify({ error: `Unknown action: ${type}` }));
     }
   });
 

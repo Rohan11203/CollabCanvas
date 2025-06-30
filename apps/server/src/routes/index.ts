@@ -114,7 +114,7 @@ UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
   try {
     const room = await prismaClient.room.create({
       data: {
-        slug: parsed.data.name,
+        slug: name,
         adminId,
       },
     });
@@ -128,7 +128,7 @@ UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
   }
 });
 
-UserRouter.get("/chats/:roomId",async (req, res) => {
+UserRouter.get("/chats/:roomId", async (req, res) => {
   try {
     const roomId = Number(req.params.roomId);
     const messages = await prismaClient.chat.findMany({
@@ -143,6 +143,26 @@ UserRouter.get("/chats/:roomId",async (req, res) => {
 
     res.json({
       messages,
+    });
+  } catch (e) {
+    console.log(e);
+    res.json({
+      messages: [],
+    });
+  }
+});
+
+UserRouter.get("/rooms/:name", async (req, res) => {
+  try {
+    const roomName = req.params.name;
+    const room = await prismaClient.room.findMany({
+      where: {
+        slug: roomName,
+      },
+    });
+
+    res.json({
+      room,
     });
   } catch (e) {
     console.log(e);

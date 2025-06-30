@@ -1,10 +1,11 @@
 import express, { Request, Response, Router } from 'express'
 import { UserRouter } from './routes';
-
+import cors from 'cors'
 const app = express();
 const PORT = 3001;
 
 app.use(express.json())
+app.use(cors());
 
 app.use("/v1/user",UserRouter)
 
