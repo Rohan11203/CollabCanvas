@@ -3,8 +3,9 @@ import { useEffect, useRef } from "react";
 import { IconButton } from "./InconButton";
 import { Circle, Pencil, RectangleHorizontal } from "lucide-react";
 import { useState } from "react";
+import { Game } from "@/draw/Game";
 
-type Shape = "circle" | "rect" | "pencil";
+export type Tool = "circle" | "rect" | "pencil";
 export function Canvas({
   roomId,
   socket,
@@ -13,20 +14,22 @@ export function Canvas({
   socket: WebSocket;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedTool, setSelectedTool] = useState<Shape>("circle");
-
-  // remove in future
-  useEffect(() => {
-    //@ts-ignore
-    window.selectedTool = selectedTool
-  },[selectedTool])
-
+  const [game, setGame] = useState<Game>();
+  const [selectedTool, setSelectedTool] = useState<Tool>("circle");
 
   useEffect(() => {
-    if (!canvasRef.current || !socket) return;
+    game?.setTool(selectedTool);
+  }, [selectedTool]);
 
-    // initDraw returns a cleanup fn (we added that in the last snippet)
-    initDraw(canvasRef.current, roomId, socket);
+  useEffect(() => {
+    if (canvasRef.current) {
+      const g = new Game(canvasRef.current, roomId, socket);
+      setGame(g);
+
+      return () => {
+        g.distroy();
+      };
+    }
   }, [canvasRef, socket, roomId]);
 
   return (
@@ -50,8 +53,8 @@ function TopBar({
   selectedTool,
   setSelectedTool,
 }: {
-  selectedTool: Shape;
-  setSelectedTool: (e: Shape) => void;
+  selectedTool: Tool;
+  setSelectedTool: (e: Tool) => void;
 }) {
   return (
     <div
