@@ -3,17 +3,15 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { prismaClient } from "@repo/db/client";
 
-interface UserI {
+interface Connection {
   ws: WebSocket;
+  userId: string;
   rooms: Set<string>;
 }
 
-type UsersMap = Map<string, UserI>;
+type RoomsMap = Map<string, Set<WebSocket>>;
 
-type RoomsMap = Map<string, Set<string>>;
-
-const wss = new WebSocketServer({ port: 8080 });
-const users: UsersMap = new Map();
+const connections: Map<WebSocket, Connection> = new Map();
 const rooms: RoomsMap = new Map();
 
 function checkUser(token: string): string | null {
@@ -32,15 +30,19 @@ type Message = {
   message?: string;
 };
 
+const wss = new WebSocketServer({ port: 8080 });
+
 wss.on("connection", (ws, req) => {
   const params = new URLSearchParams((req.url || "").split("?", 2)[1]);
   const userId = checkUser(params.get("token") || "");
-  if (!userId) return ws.close(1008, "Authentication required");
+  if (!userId) {
+    ws.close(1008, "Authentication required");
+    return;
+  }
 
-  users.set(userId, { ws, rooms: new Set() });
+  connections.set(ws, { ws, userId, rooms: new Set() });
 
   ws.on("message", async (raw) => {
-   
     let msg: Message;
     try {
       msg = JSON.parse(raw.toString());
@@ -49,73 +51,65 @@ wss.on("connection", (ws, req) => {
     }
 
     const { type, roomId, message } = msg;
-    const user = users.get(userId)!;
+    const conn = connections.get(ws)!;
 
     switch (type) {
       case "join-room": {
-        if (!roomId)
+        if (!roomId) {
           return ws.send(JSON.stringify({ error: "No room specified" }));
+        }
         const dbRoom = await prismaClient.room.findFirst({
-          where: {
-            id: Number(roomId),
-          },
+          where: { id: Number(roomId) },
         });
-        if (!dbRoom)
+        if (!dbRoom) {
           return ws.send(JSON.stringify({ error: "Room not found" }));
+        }
 
-        user.rooms.add(roomId);
+        conn.rooms.add(roomId);
         if (!rooms.has(roomId)) rooms.set(roomId, new Set());
-        rooms.get(roomId)!.add(userId);
+        rooms.get(roomId)!.add(ws);
 
         return ws.send(JSON.stringify({ info: `Joined room ${roomId}` }));
       }
 
       case "chat": {
-        if (!roomId || typeof message !== "string")
+        if (!roomId || typeof message !== "string") {
           return ws.send(JSON.stringify({ error: "Need room and message" }));
-        const memberSet = rooms.get(roomId);
-        if (!memberSet || !memberSet.has(userId))
+        }
+        if (!conn.rooms.has(roomId)) {
           return ws.send(JSON.stringify({ error: `Not in room ${roomId}` }));
+        }
 
-        // chat in DB
-        const dbRoom = await prismaClient.room.findFirst({
-          where: {
-            id: Number(roomId),
+        await prismaClient.chat.create({
+          data: {
+            roomId: Number(roomId),
+            message,
+            userId: conn.userId,
           },
         });
-        if (dbRoom) {
-          await prismaClient.chat.create({
-            data: {
-              roomId: dbRoom.id,
-              message,
-              userId,
-            },
-          });
-        }
 
         const payload = JSON.stringify({
           type: "chat",
           roomId,
-          from: userId,
+          from: conn.userId,
           message,
         });
-        for (const peerId of memberSet) {
-          users.get(peerId)?.ws.send(payload);
+        for (const peerWs of rooms.get(roomId)!) {
+          peerWs.send(payload);
         }
         return;
       }
 
       case "leave-room": {
-        if (!roomId)
+        if (!roomId) {
           return ws.send(JSON.stringify({ error: "No room specified" }));
-        user.rooms.delete(roomId);
-
-        const memberSet = rooms.get(roomId);
-        if (memberSet) {
-          memberSet.delete(userId);
-          if (memberSet.size === 0) rooms.delete(roomId);
         }
-
+        conn.rooms.delete(roomId);
+        const set = rooms.get(roomId);
+        if (set) {
+          set.delete(ws);
+          if (set.size === 0) rooms.delete(roomId);
+        }
         return ws.send(JSON.stringify({ info: `Left room ${roomId}` }));
       }
 
@@ -125,16 +119,16 @@ wss.on("connection", (ws, req) => {
   });
 
   ws.on("close", () => {
-    const user = users.get(userId);
-    if (!user) return;
+    const conn = connections.get(ws);
+    if (!conn) return;
 
-    for (const slug of user.rooms) {
-      const set = rooms.get(slug);
+    for (const r of conn.rooms) {
+      const set = rooms.get(r);
       if (set) {
-        set.delete(userId);
-        if (set.size === 0) rooms.delete(slug);
+        set.delete(ws);
+        if (set.size === 0) rooms.delete(r);
       }
     }
-    users.delete(userId);
+    connections.delete(ws);
   });
 });
