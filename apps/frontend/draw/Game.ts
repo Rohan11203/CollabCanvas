@@ -98,13 +98,13 @@ export class Game {
     });
   }
 
-  mouseDownHandler = (e) => {
+  mouseDownHandler = (e:any) => {
     this.clicked = true;
     this.startX = e.clientX;
     this.startY = e.clientY;
   }
 
-  mouseUpHandler = (e) => {
+  mouseUpHandler = (e:any) => {
     this.clicked = false;
     const width = e.clientX - this.startX;
     const height = e.clientY - this.startY;
@@ -145,14 +145,12 @@ export class Game {
     );
   }
 
-  mouseMoveHandler = (e) => {
+  mouseMoveHandler = (e:any) => {
     if (this.clicked) {
       const width = e.clientX - this.startX;
       const height = e.clientY - this.startY;
       this.clearCanvas();
       this.ctx.strokeStyle = "rgba(255,255,255)";
-      // remove in future
-      //@ts-ignore
       const selectedTool = this.selectedTool;
       if (selectedTool == "rect") {
         this.ctx.strokeRect(this.startX, this.startY, width, height);
