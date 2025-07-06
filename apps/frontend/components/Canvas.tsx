@@ -20,7 +20,12 @@ export function Canvas({
   }, [canvasRef, socket, roomId]);
 
   return (
-    <div className="h-[100vh] overflow-hidden ">
+    <div
+      style={{
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       <canvas
         width={window.innerWidth}
         height={window.innerHeight}
@@ -33,8 +38,12 @@ export function Canvas({
 
 function TopBar() {
   return (
-    <div className="fixed  top-0 left-0 z-50 p-2 bg-red-500 bg-red-500">
-      <div className="flex gap-2">
+    <div style={{
+      position: "fixed",
+      top : 10,
+      left : 10
+    }}>
+      <div className="flex gap-2 bg-red-600">
         <IconButton icon={<Pencil />} onClick={() => {}}></IconButton>
         <IconButton
           icon={<RectangleHorizontal />}
