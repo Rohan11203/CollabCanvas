@@ -8,7 +8,7 @@ export function RoomCanvas({ roomId }: { roomId: string }) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   // const token = localStorage.getItem("token");
   const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNWY2NTgzNS1mODFlLTQzYjctODY4Yy0yZGJmY2YyYTk0NzIiLCJlbWFpbCI6InJvaGFuQGdtYWlsLmNvbSIsImlhdCI6MTc1MTgwNDQyNSwiZXhwIjoxNzUxODExNjI1fQ._2leGwqrAh-auaraWFieCz_IBx1Kup4cZUBVUC7Rdj4";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNWY2NTgzNS1mODFlLTQzYjctODY4Yy0yZGJmY2YyYTk0NzIiLCJlbWFpbCI6InJvaGFuQGdtYWlsLmNvbSIsImlhdCI6MTc1MjE1MjQ1MSwiZXhwIjoxNzUyMTU5NjUxfQ.En0W7BhzRKkqFZ_qfWelZdl0UWneDyLdc4kaPVywvao";
   useEffect(() => {
     const ws = new WebSocket(`${WS_URL}?token=${token}`);
 
