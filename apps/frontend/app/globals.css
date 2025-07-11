@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@source "../../../packages/ui";
+
+@theme {
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+}
+
+
 html, body {
   margin: 0;
   padding: 0;
