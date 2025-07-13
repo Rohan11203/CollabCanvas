@@ -9,6 +9,7 @@ interface ButtonProps {
   children: ReactNode;
   className?: string;
   variant: Variant;
+  onClick: () => void
 }
 
 const variantClasses: Record<Variant, string> = {
