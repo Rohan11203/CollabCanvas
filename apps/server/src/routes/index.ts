@@ -16,11 +16,10 @@ UserRouter.post("/signup", async (req: any, res: any) => {
   const parsed = CreateUserSchema.safeParse(req.body);
 
   if (!parsed.success) {
-    res.json({
-      error: parsed.error.issues[0]?.message,
-      message: "Incorrect inputs",
+    return res.status(400).json({
+      message: "Enter Valid Details",
+      errors: parsed.error.errors.map((e) => e.message),
     });
-    return;
   }
 
   const { username, email, password } = parsed.data;
@@ -41,9 +40,13 @@ UserRouter.post("/signup", async (req: any, res: any) => {
       data: { email, password: hashPassword, username },
     });
 
+    const payload = { sub: user.id.toString(), email: user.email };
+    const token = jwt.sign(payload, JWT_SECRET);
+
     res.status(200).json({
-      user,
-      message: "SignUp successfull",
+      success: true,
+      message: "SignUp successful",
+      token,
     });
   } catch (error) {
     res.status(404).json({
@@ -55,12 +58,11 @@ UserRouter.post("/signup", async (req: any, res: any) => {
 UserRouter.post("/signin", async (req: any, res: any) => {
   const parsed = SigninSchema.safeParse(req.body);
 
-  if (!parsed.success) {
-    res.json({
-      error: parsed.error.issues[0]?.message,
-      message: "Incorrect inputs",
+   if (!parsed.success) {
+    return res.status(400).json({
+      message: "Enter Valid Details",
+      errors: parsed.error.errors.map((e) => e.message),
     });
-    return;
   }
 
   const { email, password } = parsed.data;
@@ -83,7 +85,7 @@ UserRouter.post("/signin", async (req: any, res: any) => {
     }
 
     const payload = { sub: user.id.toString(), email: user.email };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "2h" });
+    const token = jwt.sign(payload, JWT_SECRET);
 
     res.status(200).json({
       message: "Signin successfull",
