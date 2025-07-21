@@ -12,7 +12,7 @@ const Hero = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [googleLoading, setGoogleLoding] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   async function handleSubmit(
     mode: String,
@@ -22,16 +22,20 @@ const Hero = () => {
       try {
         setLoading(true);
         console.log("Signup payload:", { username, email, password });
-        const res = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/signup`, {
-          username,
-          email,
-          password,
-        });
+        const res = await axios.post(
+          `${NEXT_PUBLIC_API_BASE_URL}/signup`,
+          {
+            username,
+            email,
+            password,
+          },
+          { withCredentials: true }
+        );
         console.log("Signup success:", res);
         console.log("Token:", res.data.token);
         localStorage.setItem("token", res.data.token);
         setErrors([]);
-        router.push("/dashboard")
+        router.push("/dashboard");
       } catch (err: any) {
         if (err.response?.data?.errors) {
           setErrors(err.response.data.errors);
@@ -48,15 +52,21 @@ const Hero = () => {
       try {
         setLoading(true);
         console.log("Signup payload:", { email, password });
-        const res = await axios.post(`${NEXT_PUBLIC_API_BASE_URL}/signin`, {
-          email,
-          password,
-        });
+        const res = await axios.post(
+          `${NEXT_PUBLIC_API_BASE_URL}/signin`,
+          {
+            email,
+            password,
+          },
+          {
+            withCredentials: true,
+          }
+        );
         console.log("Signin success:", res);
         console.log("Token:", res.data.token);
         localStorage.setItem("token", res.data.token);
         setErrors([]);
-        router.push("/dashboard")
+        router.push("/dashboard");
       } catch (err: any) {
         if (err.response?.data?.errors) {
           setErrors(err.response.data.errors);

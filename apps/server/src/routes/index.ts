@@ -43,11 +43,19 @@ UserRouter.post("/signup", async (req: any, res: any) => {
     const payload = { sub: user.id.toString(), email: user.email };
     const token = jwt.sign(payload, JWT_SECRET);
 
-    res.status(200).json({
-      success: true,
-      message: "SignUp successful",
-      token,
-    });
+    return res
+      .status(200)
+      .cookie("token", token, {
+        httpOnly: false, // in production, set to true
+        secure: false, // Needed for HTTPS (Render uses HTTPS)
+        sameSite: "lax", // none for production
+      })
+      .json({
+        success: true,
+        message: "SignUp successful",
+        token,
+        user: { id: user.id, username: user.username, email: user.email },
+      });
   } catch (error) {
     res.status(404).json({
       error: error,
@@ -58,7 +66,7 @@ UserRouter.post("/signup", async (req: any, res: any) => {
 UserRouter.post("/signin", async (req: any, res: any) => {
   const parsed = SigninSchema.safeParse(req.body);
 
-   if (!parsed.success) {
+  if (!parsed.success) {
     return res.status(400).json({
       message: "Enter Valid Details",
       errors: parsed.error.errors.map((e) => e.message),
@@ -87,10 +95,19 @@ UserRouter.post("/signin", async (req: any, res: any) => {
     const payload = { sub: user.id.toString(), email: user.email };
     const token = jwt.sign(payload, JWT_SECRET);
 
-    res.status(200).json({
-      message: "Signin successfull",
-      token,
-    });
+    return res
+      .status(200)
+      .cookie("token", token, {
+        httpOnly: false, // in production, set to true
+        secure: false, // Needed for HTTPS (Render uses HTTPS)
+        sameSite: "lax", // none for production
+      })
+      .json({
+        success: true,
+        message: "Signin successful",
+        token,
+        user: { id: user.id, username: user.username, email: user.email },
+      });
   } catch (error) {
     res.status(404).json({
       message: error,

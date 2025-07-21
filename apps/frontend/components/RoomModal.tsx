@@ -1,3 +1,5 @@
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function RoomModal() {
@@ -6,16 +8,24 @@ export function RoomModal() {
   const [userName, setUserName] = useState("");
   const [roomCode, setRoomCode] = useState("");
 
-  const handleCreateRoom = () => {
+  const router = useRouter();
+  const handleCreateRoom = async () => {
     if (!roomName.trim() || !userName.trim()) return;
 
-    // call the api of create-room
+    const res = await axios.post(
+      "http://localhost:3001/v1/user/create-room",
+      roomName,
+      {
+        withCredentials: true,
+      }
+    );
+
+    router.push(`/canvas/${roomName}`);
 
     // Here you would typically navigate to the drawing canvas
   };
 
   const handleJoinRoom = () => {
-    
     // Here you would typically navigate to the drawing canvas
   };
 
