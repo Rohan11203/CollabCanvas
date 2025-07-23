@@ -9,7 +9,6 @@ import {
   SigninSchema,
 } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
-import { nanoid } from "nanoid";
 
 export const UserRouter: Router = Router();
 UserRouter.post("/signup", async (req: any, res: any) => {
@@ -118,7 +117,6 @@ UserRouter.post("/signin", async (req: any, res: any) => {
 UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
   const parsed = CreateRoomSchema.safeParse(req.body);
 
-  console.log(parsed);
   if (!parsed.success) {
     res.json({
       message: "Incorrect inputs",
@@ -137,19 +135,27 @@ UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
         adminId,
       },
     });
-    res.json({
+    res.status(201).json({
       message: "Room created Successfully",
       room,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      // This is a conflict because the room name (slug) already exists
+      return res
+        .status(409)
+        .json({ message: "A room with this name already exists." });
+    }
+
     console.error(error);
-    return res.status(500).json({ message: "Could not create room" });
+    return res.status(500).json({ message: "An internal error occurred." });
   }
 });
 
 UserRouter.get("/chats/:roomId", async (req, res) => {
+  const roomId = Number(req.params.roomId);
+
   try {
-    const roomId = Number(req.params.roomId);
     const messages = await prismaClient.chat.findMany({
       where: {
         roomId: roomId,
@@ -171,6 +177,27 @@ UserRouter.get("/chats/:roomId", async (req, res) => {
   }
 });
 
+
+UserRouter.get("/rooms", Userauth, async (req: any, res: any) => {
+  try {
+    const userId = req.user.id;
+
+    const rooms = await prismaClient.room.findMany({
+      where: {
+        adminId: userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 4,
+    });
+
+    res.json({ rooms });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Failed to fetch rooms" });
+  }
+});
 UserRouter.get("/rooms/:name", async (req, res) => {
   try {
     const roomName = req.params.name;
@@ -185,8 +212,8 @@ UserRouter.get("/rooms/:name", async (req, res) => {
     });
   } catch (e) {
     console.log(e);
-    res.json({
-      messages: [],
+    res.status(500).json({
+      error: "internal server error",
     });
   }
 });
