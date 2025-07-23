@@ -58,18 +58,22 @@ wss.on("connection", (ws, req) => {
         if (!roomId) {
           return ws.send(JSON.stringify({ error: "No room specified" }));
         }
-        const dbRoom = await prismaClient.room.findFirst({
-          where: { id: Number(roomId) },
-        });
-        if (!dbRoom) {
-          return ws.send(JSON.stringify({ error: "Room not found" }));
+        try {
+          const dbRoom = await prismaClient.room.findFirst({
+            where: { id: Number(roomId) },
+          });
+          if (!dbRoom) {
+            return ws.send(JSON.stringify({ error: "Room not found" }));
+          }
+
+          conn.rooms.add(roomId);
+          if (!rooms.has(roomId)) rooms.set(roomId, new Set());
+          rooms.get(roomId)!.add(ws);
+
+          return ws.send(JSON.stringify({ info: `Joined room ${roomId}` }));
+        } catch (error) {
+          console.log("Something went wrong while joining the room", error);
         }
-
-        conn.rooms.add(roomId);
-        if (!rooms.has(roomId)) rooms.set(roomId, new Set());
-        rooms.get(roomId)!.add(ws);
-
-        return ws.send(JSON.stringify({ info: `Joined room ${roomId}` }));
       }
 
       case "chat": {
@@ -80,24 +84,28 @@ wss.on("connection", (ws, req) => {
           return ws.send(JSON.stringify({ error: `Not in room ${roomId}` }));
         }
 
-        await prismaClient.chat.create({
-          data: {
-            roomId: Number(roomId),
-            message,
-            userId: conn.userId,
-          },
-        });
+        try {
+          await prismaClient.chat.create({
+            data: {
+              roomId: Number(roomId),
+              message,
+              userId: conn.userId,
+            },
+          });
 
-        const payload = JSON.stringify({
-          type: "chat",
-          roomId,
-          from: conn.userId,
-          message,
-        });
-        for (const peerWs of rooms.get(roomId)!) {
-          peerWs.send(payload);
+          const payload = JSON.stringify({
+            type: "chat",
+            roomId,
+            from: conn.userId,
+            message,
+          });
+          for (const peerWs of rooms.get(roomId)!) {
+            peerWs.send(payload);
+          }
+          return;
+        } catch (error) {
+          console.log("Something went wrong while sending chat", error)
         }
-        return;
       }
 
       case "leave-room": {
