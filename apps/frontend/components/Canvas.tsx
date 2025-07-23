@@ -1,8 +1,10 @@
+"use client";
 import { useEffect, useRef } from "react";
 import { IconButton } from "./InconButton";
 import { Circle, Pencil, RectangleHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Game } from "@/draw/Game";
+import { useRouter } from "next/navigation";
 
 export type Tool = "circle" | "rect" | "pencil";
 export function Canvas({
@@ -15,6 +17,7 @@ export function Canvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [game, setGame] = useState<Game>();
   const [selectedTool, setSelectedTool] = useState<Tool>("circle");
+  const router = useRouter();
 
   useEffect(() => {
     game?.setTool(selectedTool);
@@ -22,7 +25,7 @@ export function Canvas({
 
   useEffect(() => {
     if (canvasRef.current) {
-      const g = new Game(canvasRef.current, roomId, socket);
+      const g = new Game(canvasRef.current, roomId, socket, router);
       setGame(g);
 
       return () => {

@@ -21,7 +21,6 @@ const Hero = () => {
     if (mode === "signup") {
       try {
         setLoading(true);
-        console.log("Signup payload:", { username, email, password });
         const res = await axios.post(
           `${NEXT_PUBLIC_API_BASE_URL}/signup`,
           {
@@ -31,8 +30,6 @@ const Hero = () => {
           },
           { withCredentials: true }
         );
-        console.log("Signup success:", res);
-        console.log("Token:", res.data.token);
         localStorage.setItem("token", res.data.token);
         setErrors([]);
         router.push("/dashboard");
@@ -51,7 +48,6 @@ const Hero = () => {
     } else {
       try {
         setLoading(true);
-        console.log("Signup payload:", { email, password });
         const res = await axios.post(
           `${NEXT_PUBLIC_API_BASE_URL}/signin`,
           {
@@ -62,8 +58,6 @@ const Hero = () => {
             withCredentials: true,
           }
         );
-        console.log("Signin success:", res);
-        console.log("Token:", res.data.token);
         localStorage.setItem("token", res.data.token);
         setErrors([]);
         router.push("/dashboard");
@@ -86,7 +80,6 @@ const Hero = () => {
       setGoogleLoding(true);
       window.location.href =
         "https://smartclip-ai.onrender.com/api/v1/users/google";
-      localStorage.setItem("isAuth", "true");
     } catch (error) {
       console.error("Google Login Error : ", error);
     } finally {

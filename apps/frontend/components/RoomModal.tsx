@@ -12,21 +12,25 @@ export function RoomModal() {
   const handleCreateRoom = async () => {
     if (!roomName.trim() || !userName.trim()) return;
 
-    const res = await axios.post(
-      "http://localhost:3001/v1/user/create-room",
-      roomName,
-      {
-        withCredentials: true,
-      }
-    );
+    try {
+      const res = await axios.post(
+        "http://localhost:3001/v1/user/create-room",
+        { name: roomName },
+        {
+          withCredentials: true,
+        }
+      );
 
-    router.push(`/canvas/${roomName}`);
-
-    // Here you would typically navigate to the drawing canvas
+      const newRoomCode = res.data.room.id;
+      setRoomCode(newRoomCode);
+      router.push(`/canvas/${newRoomCode}`);
+    } catch (error) {
+      console.error("Failed to create room:", error);
+    }
   };
 
   const handleJoinRoom = () => {
-    // Here you would typically navigate to the drawing canvas
+    router.push(`/canvas/${roomCode}`);
   };
 
   return (

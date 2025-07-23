@@ -35,15 +35,17 @@ export class Game {
   private startY = 0;
   private selectedTool: Tool = "circle";
   private currentPencilPoints: { x: number; y: number }[] = [];
+  private router: any
   socket: WebSocket;
 
-  constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
+  constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, router:any) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
     this.existingShapes = [];
     this.roomId = roomId;
     this.socket = socket;
     this.clicked = false;
+    this.router = router;
     this.init();
     this.initHandlers();
     this.initMouseHandlers();
@@ -67,6 +69,10 @@ export class Game {
   initHandlers() {
     this.socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
+      if (message.error) {
+        alert("Room does not exists");
+        this.router.push("/dashboard")
+      }
       if (message.type == "chat") {
         const parsedShape = JSON.parse(message.message);
         this.existingShapes.push(parsedShape.shape);

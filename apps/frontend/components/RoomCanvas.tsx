@@ -6,9 +6,10 @@ import { WS_URL } from "@/config";
 
 export function RoomCanvas({ roomId }: { roomId: string }) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
     const ws = new WebSocket(`${WS_URL}?token=${token}`);
 
     ws.onopen = () => {
@@ -17,10 +18,14 @@ export function RoomCanvas({ roomId }: { roomId: string }) {
         type: "join-room",
         roomId,
       });
-      console.log(data);
       ws.send(data);
     };
-  }, []);
+
+    return () => {
+      console.log("Closing WebSocket");
+      ws.close();
+    };
+  }, [roomId]);
 
   if (!socket) {
     return <div>Connecting to server....</div>;
