@@ -6,85 +6,57 @@ import { useState } from "react";
 import axios from "axios";
 import { NEXT_PUBLIC_API_BASE_URL } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 const Hero = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const [googleLoading, setGoogleLoding] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(
-    mode: String,
+    mode: "signup" | "signin",
     { username, email, password }: any
   ) {
     if (mode === "signup") {
+      // Signup logic still uses axios to create the user first
       try {
-        setLoading(true);
-        const res = await axios.post(
-          `${NEXT_PUBLIC_API_BASE_URL}/signup`,
-          {
-            username,
-            email,
-            password,
-          },
-          { withCredentials: true }
-        );
-        localStorage.setItem("token", res.data.token);
-        setErrors([]);
-        router.push("/dashboard");
+        await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/signup`, {
+          username,
+          email,
+          password,
+        });
+        // After successful signup, automatically sign them in
+        await signIn("credentials", {
+          email,
+          password,
+          callbackUrl: "/dashboard",
+        });
       } catch (err: any) {
-        if (err.response?.data?.errors) {
-          setErrors(err.response.data.errors);
-        } else if (err.response?.data?.message) {
-          setErrors([err.response.data.message]);
-        } else {
-          setErrors(["Something went wrong. Please try again."]);
-          console.log(err);
-        }
-      } finally {
-        setLoading(false);
+        setErrors(err.response?.data?.errors || ["Signup failed."]);
       }
     } else {
-      try {
-        setLoading(true);
-        const res = await axios.post(
-          `${NEXT_PUBLIC_API_BASE_URL}/signin`,
-          {
-            email,
-            password,
-          },
-          {
-            withCredentials: true,
-          }
-        );
-        localStorage.setItem("token", res.data.token);
-        setErrors([]);
+      // For sign-in, use Next-Auth directly
+      const result = await signIn("credentials", {
+        redirect: false, // Don't redirect, handle result manually
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        setErrors(["Invalid email or password."]);
+      } else if (result?.ok) {
         router.push("/dashboard");
-      } catch (err: any) {
-        if (err.response?.data?.errors) {
-          setErrors(err.response.data.errors);
-        } else if (err.response?.data?.message) {
-          setErrors([err.response.data.message]);
-        } else {
-          setErrors(["Something went wrong. Please try again."]);
-        }
-      } finally {
-        setLoading(false);
       }
     }
   }
 
   async function handleGoogle() {
-    try {
-      setGoogleLoding(true);
-      window.location.href =
-        "https://smartclip-ai.onrender.com/api/v1/users/google";
-    } catch (error) {
-      console.error("Google Login Error : ", error);
-    } finally {
-      setGoogleLoding(false);
-    }
+    setGoogleLoading(true);
+    // Use next-auth's signIn function. It handles the redirect and callback.
+    await signIn("google", { callbackUrl: "/dashboard" });
+    // No need to set loading to false, as the page will redirect.
   }
 
   return (
@@ -108,9 +80,7 @@ const Hero = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
             <Button
-              onClick={() => {
-                setOpen(true);
-              }}
+              onClick={() => { router.push("/dashboard")}}
               variant="primary"
             >
               Create Room
@@ -121,7 +91,7 @@ const Hero = () => {
               }}
               variant="secondary"
             >
-              Join Room
+              Login Now
             </Button>
           </div>
         </div>

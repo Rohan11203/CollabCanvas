@@ -1,27 +1,38 @@
-"use client"
+"use client";
 import { HTTP_BACKEND } from "@/config";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function RecentRooms() {
   const [recentRooms, setRecentRooms] = useState([]);
+  const { data: session } = useSession();
   const router = useRouter();
-
-  const fetchRooms = async () => {
-    const response = await axios.get(`${HTTP_BACKEND}/rooms`, {
-      withCredentials: true,
-    });
-    const rooms = response.data.rooms
-    setRecentRooms(rooms)
-  };
   useEffect(() => {
-    fetchRooms();
-  }, []);
+    const fetchRooms = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/rooms`,
+          {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          }
+        );
+        setRecentRooms(response.data.rooms);
+      } catch (error) {
+        console.error("Failed to fetch rooms:", error);
+      }
+    };
 
+    if (session?.accessToken) {
+      fetchRooms();
+    }
+  }, [session]);
 
   const handleJoinRecentRoom = (room: any) => {
-    router.push(`/canvas/${room.id}`)
+    router.push(`/canvas/${room.id}`);
   };
   return (
     <div className="bg-neutral-900/50 backdrop-blur-sm rounded-xl shadow-xl border border-neutral-800 p-6">

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -7,6 +8,7 @@ export function RoomModal() {
   const [roomName, setRoomName] = useState("");
   const [userName, setUserName] = useState("");
   const [roomCode, setRoomCode] = useState("");
+  const { data: session } = useSession();
 
   const router = useRouter();
   const handleCreateRoom = async () => {
@@ -14,10 +16,12 @@ export function RoomModal() {
 
     try {
       const res = await axios.post(
-        "http://localhost:3001/v1/user/create-room",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/create-room`,
         { name: roomName },
         {
-          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
         }
       );
 

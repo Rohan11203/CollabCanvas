@@ -114,6 +114,43 @@ UserRouter.post("/signin", async (req: any, res: any) => {
   }
 });
 
+UserRouter.post("/social-login", async (req: any, res: any) => {
+  const { email, name } = req.body;
+
+  console.log('reaching here')
+  console.log(email,name)
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    let user = await prismaClient.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await prismaClient.user.create({
+        data: {
+          email,
+          username: name || email.split('@')[0],
+        },
+      });
+    }
+
+    const payload = { sub: user.id.toString(), email: user.email };
+    const token = jwt.sign(payload, JWT_SECRET);
+
+    return res.status(200).json({
+      success: true,
+      message: "Social login successful",
+      token, 
+      user: { id: user.id, username: user.username, email: user.email },
+    });
+
+  } catch (error) {
+    console.error("Social login error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 UserRouter.post("/create-room", Userauth, async (req: any, res: any) => {
   const parsed = CreateRoomSchema.safeParse(req.body);
 
@@ -217,3 +254,4 @@ UserRouter.get("/rooms/:name", async (req, res) => {
     });
   }
 });
+
