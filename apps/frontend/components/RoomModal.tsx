@@ -135,7 +135,7 @@ export function RoomModal() {
                   type="text"
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  placeholder="Enter 6-digit room code..."
+                  placeholder="Enter room code..."
                   maxLength={6}
                   className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-center text-lg font-mono tracking-wider text-white placeholder-neutral-400"
                 />

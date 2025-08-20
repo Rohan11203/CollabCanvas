@@ -117,8 +117,6 @@ UserRouter.post("/signin", async (req: any, res: any) => {
 UserRouter.post("/social-login", async (req: any, res: any) => {
   const { email, name } = req.body;
 
-  console.log('reaching here')
-  console.log(email,name)
   if (!email) {
     return res.status(400).json({ message: "Email is required" });
   }

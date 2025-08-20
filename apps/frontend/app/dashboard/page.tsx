@@ -43,8 +43,8 @@ const Dashboard = () => {
 
   if (status == "authenticated") {
     return (
-      <div className="min-h-screen relative">
-        <div className="absolute top-0 z-[-2] h-screen w-screen bg-neutral-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+      <div className="min-h-screen relative bg-neutral-950">
+        <div className="absolute top-0 z-[-2] h-screen w-screen  bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
 
         {/* Header */}
         <header className="bg-neutral-900/70 backdrop-blur-sm border-b border-neutral-800">

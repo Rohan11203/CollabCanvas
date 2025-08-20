@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { IconButton } from "./InconButton";
-import { Circle, Pencil, RectangleHorizontal } from "lucide-react";
+import { Circle, Copy, Pencil, RectangleHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Game } from "@/draw/Game";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,7 @@ export function Canvas({
       setGame(g);
 
       return () => {
-        g.distroy();
+        g.destroy();
       };
     }
   }, [canvasRef, socket, roomId]);
@@ -46,7 +46,11 @@ export function Canvas({
         height={window.innerHeight}
         ref={canvasRef}
       ></canvas>
-      <TopBar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
+      <TopBar
+        roomId={roomId}
+        selectedTool={selectedTool}
+        setSelectedTool={setSelectedTool}
+      />
     </div>
   );
 }
@@ -54,41 +58,55 @@ export function Canvas({
 function TopBar({
   selectedTool,
   setSelectedTool,
+  roomId,
 }: {
   selectedTool: Tool;
   setSelectedTool: (e: Tool) => void;
+  roomId: string;
 }) {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyId = () => {
+    // 2. Use the 'roomId' prop to copy the ID
+    navigator.clipboard.writeText(roomId).then(() => {
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    });
+  };
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 10,
-        left: 10,
-      }}
-    >
-      <div className="flex gap-2 ">
-        <IconButton
-          activated={selectedTool === "pencil"}
-          icon={<Pencil />}
-          onClick={() => {
-            setSelectedTool("pencil");
-          }}
-        ></IconButton>
-        <IconButton
-          activated={selectedTool === "rect"}
-          icon={<RectangleHorizontal />}
-          onClick={() => {
-            setSelectedTool("rect");
-          }}
-        ></IconButton>
-        <IconButton
-          activated={selectedTool === "circle"}
-          icon={<Circle />}
-          onClick={() => {
-            setSelectedTool("circle");
-          }}
-        ></IconButton>
+    <>
+      <div className="fixed top-7  sm:right-10 right-5  sm:top-5  z-10">
+        <button
+          onClick={handleCopyId}
+          className="flex items-center gap-2 text-white bg-gray-800 px-3 py-2 rounded-xl shadow-md border border-gray-200 hover:bg-gray-700 transition"
+        >
+          <Copy size={20} />
+          {isCopied ? "Copied!" : "Share"}
+        </button>
       </div>
-    </div>
+
+      <div className="fixed top-5 sm:left-1/2 left-1/3   -translate-x-1/2 z-10">
+        <div className="flex items-center gap-4 p-2 bg-gray-800 rounded-xl shadow-md border border-gray-200">
+          <IconButton
+            activated={selectedTool === "pencil"}
+            icon={<Pencil size={20} />}
+            onClick={() => setSelectedTool("pencil")}
+          />
+          <IconButton
+            activated={selectedTool === "rect"}
+            icon={<RectangleHorizontal size={20} />}
+            onClick={() => setSelectedTool("rect")}
+          />
+          <IconButton
+            activated={selectedTool === "circle"}
+            icon={<Circle size={20} />}
+            onClick={() => setSelectedTool("circle")}
+          />
+        </div>
+      </div>
+    </>
   );
 }
