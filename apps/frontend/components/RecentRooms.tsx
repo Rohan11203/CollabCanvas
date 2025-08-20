@@ -1,9 +1,15 @@
 "use client";
-import { HTTP_BACKEND } from "@/config";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+interface Room {
+  id: string;
+  slug: string;
+  lastAccessed: string;
+  createdAt: string;
+}
 
 export function RecentRooms() {
   const [recentRooms, setRecentRooms] = useState([]);
@@ -31,7 +37,7 @@ export function RecentRooms() {
     }
   }, [session]);
 
-  const handleJoinRecentRoom = (room: any) => {
+  const handleJoinRecentRoom = (room: Room) => {
     router.push(`/canvas/${room.id}`);
   };
   return (
@@ -40,7 +46,7 @@ export function RecentRooms() {
 
       {recentRooms.length > 0 ? (
         <div className="space-y-3">
-          {recentRooms.map((room: any) => (
+          {recentRooms.map((room: Room) => (
             <div
               key={room.id}
               className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800/50 cursor-pointer transition-colors"

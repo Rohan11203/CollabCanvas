@@ -21,7 +21,7 @@ export function Canvas({
 
   useEffect(() => {
     game?.setTool(selectedTool);
-  }, [selectedTool]);
+  }, [selectedTool,game]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -32,7 +32,7 @@ export function Canvas({
         g.destroy();
       };
     }
-  }, [canvasRef, socket, roomId]);
+  }, [canvasRef, socket, roomId,router]);
 
   return (
     <div

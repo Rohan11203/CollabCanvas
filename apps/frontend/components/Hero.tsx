@@ -1,10 +1,8 @@
 "use client";
-import { Play } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import AuthModal from "./AuthModal";
 import { useState } from "react";
-import axios from "axios";
-import { NEXT_PUBLIC_API_BASE_URL } from "@/lib/api";
+import axios, { isAxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -15,26 +13,41 @@ const Hero = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
 
+  interface UserData {
+    username?: string;
+    email: string;
+    password: string;
+  }
+
   async function handleSubmit(
     mode: "signup" | "signin",
-    { username, email, password }: any
+    { username, email, password }: UserData
   ) {
     if (mode === "signup") {
       // Signup logic still uses axios to create the user first
       try {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/user/signup`, {
-          username,
-          email,
-          password,
-        });
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/user/signup`,
+          {
+            username,
+            email,
+            password,
+          }
+        );
         // After successful signup, automatically sign them in
         await signIn("credentials", {
           email,
           password,
           callbackUrl: "/dashboard",
         });
-      } catch (err: any) {
-        setErrors(err.response?.data?.errors || ["Signup failed."]);
+      } catch (err) {
+        if (isAxiosError(err)) {
+          setErrors(err.response?.data?.errors || ["Signup failed."]);
+        } else {
+          setErrors(["An unknown error occurred."]);
+        }
+      } finally {
+        setLoading(false);
       }
     } else {
       // For sign-in, use Next-Auth directly
@@ -80,7 +93,9 @@ const Hero = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
             <Button
-              onClick={() => { router.push("/dashboard")}}
+              onClick={() => {
+                router.push("/dashboard");
+              }}
               variant="primary"
             >
               Create Room

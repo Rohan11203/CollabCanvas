@@ -1,5 +1,23 @@
+import Image from "next/image";
 import { useState } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
+
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (
+    mode: "signup" | "signin",
+    data: {
+      username: string;
+      email: string;
+      password: string;
+    }
+  ) => void;
+  onGoogle: () => void;
+  error: string[] | [];
+  loading: boolean;
+  googleLoading: boolean;
+}
 
 export default function AuthModal({
   isOpen,
@@ -9,7 +27,7 @@ export default function AuthModal({
   error,
   loading,
   googleLoading,
-}: any) {
+}: AuthModalProps) {
   const [mode, setMode] = useState<"signup" | "signin">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,10 +78,11 @@ export default function AuthModal({
         >
           {!googleLoading ? (
             <>
-              <img
+              <Image
                 src="https://www.svgrepo.com/show/355037/google.svg"
                 alt="Google logo"
-                className="h-5 w-5"
+                width={20}
+                height={20}
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 {isSignup ? "Sign up" : "Sign in"} with Google

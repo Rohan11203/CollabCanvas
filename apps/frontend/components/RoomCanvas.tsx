@@ -10,6 +10,9 @@ export function RoomCanvas({ roomId }: { roomId: string }) {
   const { data: session } = useSession();
 
   useEffect(() => {
+    if (!session?.accessToken) {
+      return;
+    }
 
     const ws = new WebSocket(`${WS_URL}?token=${session?.accessToken}`);
 
@@ -26,7 +29,7 @@ export function RoomCanvas({ roomId }: { roomId: string }) {
       console.log("Closing WebSocket");
       ws.close();
     };
-  }, [roomId]);
+  }, [roomId, session?.accessToken]);
 
   if (!socket) {
     return <div>Connecting to server....</div>;
