@@ -22,7 +22,7 @@ const Hero = () => {
     if (mode === "signup") {
       // Signup logic still uses axios to create the user first
       try {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/signup`, {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/user/signup`, {
           username,
           email,
           password,

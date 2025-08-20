@@ -13,7 +13,7 @@ export function RecentRooms() {
     const fetchRooms = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/rooms`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/user/rooms`,
           {
             headers: {
               Authorization: `Bearer ${session?.accessToken}`,

@@ -46,7 +46,7 @@ export const authOptions: AuthOptions = {
 
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL}/signin`,
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/user/signin`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -80,7 +80,7 @@ export const authOptions: AuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/social-login`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/user/social-login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: user.email, name: user.name }),

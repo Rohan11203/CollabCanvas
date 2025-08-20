@@ -16,7 +16,7 @@ export function RoomModal() {
 
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/create-room`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1/user/create-room`,
         { name: roomName },
         {
           headers: {
